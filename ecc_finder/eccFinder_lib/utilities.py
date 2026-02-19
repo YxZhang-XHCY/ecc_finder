@@ -11,7 +11,7 @@ import sys
 complements = str.maketrans("ACGTNURYSWKMBVDHacgtnuryswkmbvdh", "TGCANAYRSWMKVBHDtgcanayrswmkvbhd")
 
 def get_eccFinder_version():
-    return 'v1.0.0'
+    return 'v1.1.0'
 
 def reverse_complement(seq):
     return seq.translate(complements)[::-1]

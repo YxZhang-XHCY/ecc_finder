@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 
-from setuptools import setup
-import glob
-
-from eccFinder_lib.utilities import get_eccFinder_version
-scripts = glob.glob("*.p*")
+from setuptools import setup, find_packages
 
 setup(
     name='ecc_finder',
-    version='v1.0.0',
+    version='v1.1.0',
     description='A tool for detecting extrachromosomal circular DNA (eccDNA) from sequencing data.',
     author='Panpan Zhang',
     author_email='njaupanpan@gmail.com',
-    packages=['eccFinder_lib'],
-    package_dir={'eccFinder_lib': 'eccFinder_lib/'},
+    packages=find_packages(),
     install_requires=[
-              'pysam',
-              'numpy',
-              'pandas',
-              'matplotlib',
-              'pybedtools'
-          ],
-    scripts=scripts,
+        'pysam',
+        'numpy',
+        'pandas',
+        'matplotlib',
+        'pybedtools'
+    ],
+    entry_points={
+        'console_scripts': [
+            'ecc_finder=ecc_finder.cli:main',
+        ],
+    },
     zip_safe=True
+)

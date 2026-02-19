@@ -3,22 +3,22 @@
 """
 # June 2021
 # If using this pipeline please cite : XXXXXXXXXX
-#--------------------------------------------------------------------------+    
-#                                                   
-#	ecc_finder is a tool 
-#       to detect eccDNA using Illumina and ONT sequencing.  
-#                                                        
 #--------------------------------------------------------------------------+
-#                                                      
-#	AUTHOR: panpan ZHANG                            
-#	CONTACT: njaupanpan@gmail.com                      
-#                                                         
-#	LICENSE:                                            
-# 	GNU General Public License, Version 3               
-#	http://www.gnu.org/licenses/gpl.html  
-#                                             
-#	VERSION: v1.0.0                  
-#                                                                                                       
+#
+#	ecc_finder is a tool
+#       to detect eccDNA using Illumina and ONT sequencing.
+#
+#--------------------------------------------------------------------------+
+#
+#	AUTHOR: panpan ZHANG
+#	CONTACT: njaupanpan@gmail.com
+#
+#	LICENSE:
+# 	GNU General Public License, Version 3
+#	http://www.gnu.org/licenses/gpl.html
+#
+#	VERSION: v1.0.0
+#
 #--------------------------------------------------------------------------+
 """
 
@@ -34,23 +34,23 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from eccFinder_lib.utilities import log,run_oae,get_eccFinder_version
-from eccFinder_lib.Aligner import Minimap2SAMAligner
-from eccFinder_lib.Aligner import Minimap2Aligner
-from eccFinder_lib.Spliter import tidehunter
-from eccFinder_lib.Peaker import genrich
+from ecc_finder.eccFinder_lib.utilities import log,run_oae,get_eccFinder_version
+from ecc_finder.eccFinder_lib.Aligner import Minimap2SAMAligner
+from ecc_finder.eccFinder_lib.Aligner import Minimap2Aligner
+from ecc_finder.eccFinder_lib.Spliter import tidehunter
+from ecc_finder.eccFinder_lib.Peaker import genrich
 
 def read_genome_alignments(file_prefix,align_path,min_qlen,min_aln, overwrite_files):
     """ Filtering the raw read alignments based on query length and alignment length."""
     if os.path.isfile(align_path + file_prefix+".paf.bed"):
         log("INFO", "Retaining pre-existing file: " + align_path +file_prefix+".paf.bed")
     else:
-        with open(align_path + file_prefix+".paf") as f:   
+        with open(align_path + file_prefix+".paf") as f:
             outfile=open(align_path + file_prefix+".paf.bed",'w')
             headers = ['refID','rstart', 'rend','queryID','qlen','direction']
             total=0
             n_primary=0
-            for line in f: 
+            for line in f:
                 parts = line.strip().split("\t")
                 total=total+1
                 resultss = {
@@ -86,12 +86,12 @@ def run_TideHunter(file_prefix,query_file,peak_path, num_threads, max_divergence
             TH_params = " -c "+ str(num_copies)
             TH_params += " -t " + str(num_threads) +" -e " +str(max_divergence) +" -p " + str(min_period_size)+ " -P 1000000 "
             TH_cmd = "TideHunter"+ TH_params+ str(query_file)+ " -u > "+ peak_path +file_prefix+".unit.fa"
-            subprocess.call(TH_cmd, shell=True) 
-    else:  
+            subprocess.call(TH_cmd, shell=True)
+    else:
         TH_params = " -c "+ str(num_copies)
         TH_params += " -t " + str(num_threads) +" -e " +str(max_divergence) +" -p " + str(min_period_size)+ " -P 1000000 "
         TH_cmd = "TideHunter"+ TH_params+ str(query_file)+ " -u > "+ peak_path +file_prefix+".unit.fa"
-        subprocess.call(TH_cmd, shell=True) 
+        subprocess.call(TH_cmd, shell=True)
 
 def run_samtools(file_prefix,output_path,peak_path,num_threads, overwrite_files):
     """ sort, filter and index alignments. """
@@ -119,27 +119,27 @@ def run_Genrich(file_prefix,output_path,peak_path,num_threads, min_peak,max_dist
             log("INFO", "Overwriting pre-existing file: " + output_path +file_prefix+".site.bed")
             run_samtools(file_prefix,output_path, num_threads, overwrite_files)
             GR_params = " -yv "
-            GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue) 
+            GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)
             GR_cmd = "Genrich -t "+ peak_path +file_prefix+".unit.bam" + GR_params+ " -o "+ peak_path +file_prefix+".site"
-            subprocess.call(GR_cmd, shell=True) 
+            subprocess.call(GR_cmd, shell=True)
             cmd1 = "cut -f1-3 " + peak_path +file_prefix+".site" + " > " +output_path +file_prefix+".site.bed"
             os.popen("{inS} ".format(inS=cmd1))
-    else:    
+    else:
         GR_params = " -yv "
-        GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)    
+        GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)
         GR_cmd = "Genrich -t "+peak_path +file_prefix+".unit.bam" + GR_params+ " -o "+ peak_path +file_prefix+".site"
-        subprocess.call(GR_cmd, shell=True) 
+        subprocess.call(GR_cmd, shell=True)
         cmd1 = "cut -f1-3 " + peak_path +file_prefix+".site" + " > " +output_path +file_prefix+".site.bed"
         os.popen("{inS} ".format(inS=cmd1))
 
 def run_filterBED(file_prefix,output_path, align_path,min_read,min_bound,min_cov,overwrite_files):
     if os.path.isfile(output_path +file_prefix +".csv"):
         log("INFO", "Filtering locus by repeat units in one read")
-    else:  
-        bedtools_params= " -wao -f "+ str(min_bound) 
+    else:
+        bedtools_params= " -wao -f "+ str(min_bound)
         tmp1=output_path +file_prefix+".paf.bed.tmp1"
         cmd ="bedtools intersect -a "+ output_path +file_prefix+".site.bed -b " + align_path +file_prefix + ".paf.bed" + bedtools_params+ " -nonamecheck > "+tmp1
-        subprocess.call(cmd, shell=True) 
+        subprocess.call(cmd, shell=True)
 
         cmd1 = "cat "+ output_path +file_prefix+".paf.bed.tmp1"
         cmd2 = "awk '$10>0'| sort -k7,7 -k9,9 | groupBy -g 1,2,3,7,9 -c 7 -o count |awk '$6>1'"
@@ -151,16 +151,16 @@ def run_filterBED(file_prefix,output_path, align_path,min_read,min_bound,min_cov
         log("INFO", "Filtering locus by boundary coverage. ")
         csv=output_path +file_prefix +".tmp.csv"
         cmd ="bedtools coverage -counts -a "+ output_path +file_prefix+".paf.bed.tmp2 -b " + align_path +file_prefix + ".paf.bed -f " + str(min_bound)+ " -nonamecheck > "+csv
-        subprocess.call(cmd, shell=True) 
+        subprocess.call(cmd, shell=True)
 
         # Write the ecc_finder.csv.
         log("INFO", "Filtering locus by mininum number of tandely repeated long reads ")
-        with open(output_path + file_prefix+".tmp.csv") as f:   
+        with open(output_path + file_prefix+".tmp.csv") as f:
             outfile=open(output_path + file_prefix+".csv",'w')
             headers = ['refID','rstart','rend','read_number','repeat_unit','coverage','ecc_len']
             total=0
             n_primary=0
-            for line in f: 
+            for line in f:
                 parts = line.strip().split("\t")
                 total=total+1
                 resultss = {
@@ -196,19 +196,19 @@ def run_getFasta(output_path, file_prefix ,ref_genome,overwrite_files):
         else:
             log("INFO", "Overwriting pre-existing file: " + output_path +file_prefix+".fasta")
             cmd ="seqtk subseq "+ ref_genome+ " " + output_path +file_prefix +".csv" + "> "+output_path +file_prefix +".fasta"
-            subprocess.call(cmd, shell=True) 
-    else: 
+            subprocess.call(cmd, shell=True)
+    else:
         cmd ="seqtk subseq "+ ref_genome+ " " + output_path +file_prefix +".csv" + "> "+output_path +file_prefix +".fasta"
-        subprocess.call(cmd, shell=True) 
+        subprocess.call(cmd, shell=True)
 
 def main():
     description = "A tool to detect eccDNA loci using ONT sequencing"
-    parser = argparse.ArgumentParser(description=description, usage="ecc_finder.py map-ont <reference.idx> <query.fq> -r <reference.fa> (option)")
+    parser = argparse.ArgumentParser(description=description, usage="ecc_finder map-ont <reference.idx> <query.fq> -r <reference.fa> (option)")
     parser.add_argument("idx", metavar="<reference.idx>", nargs='?', default="", type=str, help="index file of reference genome")
     parser.add_argument("query", metavar="<query.fq>", nargs='?', default="", type=str, help="query fastq/fasta file (uncompressed or bgzipped)")
     parser.add_argument("-r", metavar="<query.fasta>", default="", type=str, help="reference genome fasta file (uncompressed or bgzipped)")
 
-    map_options = parser.add_argument_group("map options")   
+    map_options = parser.add_argument_group("map options")
     map_options.add_argument('-t', metavar="INT",type=int, default=get_default_thread(),
                             help='number of CPU threads for mapping mode')
     mm2_default = "-x map-ont"
@@ -245,7 +245,7 @@ def main():
         sys.exit("\n** The reference fasta, idx and query files are required **")
 
     log("VERSION", "ecc_finder " + get_eccFinder_version())
-    log("CMD", "python ecc_finder.py map-ont " + " ".join(sys.argv[1:]))
+    log("CMD", "ecc_finder map-ont " + " ".join(sys.argv[1:]))
 
     idx_file = os.path.abspath(args.idx)
     query_file = os.path.abspath(args.query)
@@ -323,7 +323,7 @@ def main():
     log("INFO", "Filtering read alignments based on query length and alignment length")
     read_genome_alignments(file_prefix,align_path,min_qlen,min_aln, overwrite_files)
 
-    #Splitting into unit sequences of each tandem repeat for a long read   
+    #Splitting into unit sequences of each tandem repeat for a long read
     log("INFO", "Detecting tandem repeat pattern from long reads")
     run_TideHunter(file_prefix,query_file,peak_path, num_threads, max_divergence,min_period_size,num_copies,overwrite_files)
 

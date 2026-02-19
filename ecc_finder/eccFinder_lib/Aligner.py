@@ -4,7 +4,7 @@ import abc
 import os
 import shutil
 
-from eccFinder_lib.utilities import run_oe, run_e, log
+from ecc_finder.eccFinder_lib.utilities import run_oe, run_e, log
 
 class Aligner:
 

@@ -3,22 +3,22 @@
 """
 # June 2021
 # If using this pipeline please cite : XXXXXXXXXX
-#--------------------------------------------------------------------------+    
-#                                                   
-#	ecc_finder is a tool 
-#       to detect eccDNA using Illumina and ONT sequencing.  
-#                                                        
 #--------------------------------------------------------------------------+
-#                                                      
-#	AUTHOR: panpan ZHANG                            
-#	CONTACT: njaupanpan@gmail.com                      
-#                                                         
-#	LICENSE:                                            
-# 	GNU General Public License, Version 3               
-#	http://www.gnu.org/licenses/gpl.html  
-#                                             
-#	VERSION: v1.0.0                  
-#                                                                                                       
+#
+#	ecc_finder is a tool
+#       to detect eccDNA using Illumina and ONT sequencing.
+#
+#--------------------------------------------------------------------------+
+#
+#	AUTHOR: panpan ZHANG
+#	CONTACT: njaupanpan@gmail.com
+#
+#	LICENSE:
+# 	GNU General Public License, Version 3
+#	http://www.gnu.org/licenses/gpl.html
+#
+#	VERSION: v1.0.0
+#
 #--------------------------------------------------------------------------+
 """
 
@@ -36,12 +36,12 @@ import matplotlib.pyplot as plt
 import pybedtools
 from pybedtools import BedTool
 
-from eccFinder_lib.utilities import log,run_oae,get_eccFinder_version
-from eccFinder_lib.Aligner import Minimap2SAMAligner
-from eccFinder_lib.Aligner import Minimap2Aligner
-from eccFinder_lib.Aligner import bwaAligner
-from eccFinder_lib.Spliter import tidehunter
-from eccFinder_lib.Peaker import genrich
+from ecc_finder.eccFinder_lib.utilities import log,run_oae,get_eccFinder_version
+from ecc_finder.eccFinder_lib.Aligner import Minimap2SAMAligner
+from ecc_finder.eccFinder_lib.Aligner import Minimap2Aligner
+from ecc_finder.eccFinder_lib.Aligner import bwaAligner
+from ecc_finder.eccFinder_lib.Spliter import tidehunter
+from ecc_finder.eccFinder_lib.Peaker import genrich
 
 
 def run_fastp(file_prefix,align_path, query1_file,query2_file,num_threads, overwrite_files):
@@ -55,13 +55,13 @@ def run_fastp(file_prefix,align_path, query1_file,query2_file,num_threads, overw
             query2_file_out=align_path +file_prefix+".R2.fastq.gz"
             html_file_out=align_path +file_prefix+".html"
             fastp_cmd = "fastp --thread "+ str(num_threads) +" -i " + query1_file+ " -I "+ query2_file +" -o " + query1_file_out+ " -O "+ query2_file_out+" -h "+ html_file_out
-            subprocess.call(fastp_cmd, shell=True) 
+            subprocess.call(fastp_cmd, shell=True)
     else:
         query1_file_out=align_path +file_prefix+".R1.fastq.gz"
         query2_file_out=align_path +file_prefix+".R2.fastq.gz"
         html_file_out=align_path +file_prefix+ ".html"
         fastp_cmd = "fastp --thread "+ str(num_threads) +" -i " + query1_file+ " -I "+ query2_file +" -o " + query1_file_out+ " -O "+ query2_file_out+" -h "+ html_file_out
-        subprocess.call(fastp_cmd, shell=True) 
+        subprocess.call(fastp_cmd, shell=True)
 
 
 def run_samtools(file_prefix,align_path, num_threads, overwrite_files):
@@ -72,7 +72,7 @@ def run_samtools(file_prefix,align_path, num_threads, overwrite_files):
         else:
             log("INFO", "Overwriting pre-existing file: " + align_path +file_prefix+".bam")
             pysam.sort("-@", str(num_threads),"-n",  "-o", align_path +file_prefix+".bam", align_path +file_prefix+".sam", catch_stdout=False)
-    else:     
+    else:
         pysam.sort("-@", str(num_threads),"-n",  "-o", align_path +file_prefix+".bam", align_path +file_prefix+".sam", catch_stdout=False)
 
 def run_Genrich(file_prefix,align_path,output_path,peak_path,num_threads, min_peak,max_dist,max_pvalue,overwrite_files):
@@ -83,16 +83,16 @@ def run_Genrich(file_prefix,align_path,output_path,peak_path,num_threads, min_pe
         else:
             log("INFO", "Overwriting pre-existing file: " + output_path +file_prefix+".site.bed")
             GR_params = " -v "
-            GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue) 
+            GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)
             GR_cmd = "Genrich -t "+ align_path +file_prefix+".bam" + GR_params+ " -o "+ peak_path +file_prefix+".site"
-            subprocess.call(GR_cmd, shell=True) 
+            subprocess.call(GR_cmd, shell=True)
             cmd1 = "cut -f1-3 " + peak_path +file_prefix+".site" + " > " +output_path +file_prefix+".site.bed"
             os.popen("{inS} ".format(inS=cmd1))
-    else:          
+    else:
         GR_params = " -v "
-        GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)    
+        GR_params += " -l " + str(min_peak)+" -g " + str(max_dist) +" -p " + str(max_pvalue)
         GR_cmd = "Genrich -t "+align_path +file_prefix+".bam" + GR_params+ " -o "+ peak_path +file_prefix+".site"
-        subprocess.call(GR_cmd, shell=True) 
+        subprocess.call(GR_cmd, shell=True)
         cmd1 = "cut -f1-3 " + peak_path +file_prefix+".site" + " > " +output_path +file_prefix+".site.bed"
         os.popen("{inS} ".format(inS=cmd1))
 
@@ -104,14 +104,14 @@ def run_bedtoolss(file_prefix,align_path,num_threads, overwrite_files):
         else:
             log("INFO", "Overwriting pre-existing file: " + align_path +file_prefix+".bam.bed")
             #pybedtools.BedTool(output_path +file_prefix+".bam").bam_to_bed().saveas(output_path +file_prefix+".bam.bed")
-            cmd1 = "bedtools bamtobed -i "+ align_path +file_prefix+".bam" 
+            cmd1 = "bedtools bamtobed -i "+ align_path +file_prefix+".bam"
             cmd2 = "sed 's|/|\\t|g' |cut -f1-5,7 >" +align_path +file_prefix+".bam.bed"
             beds = "{inS} |{sed} ".format(inS=cmd1, sed=cmd2)
             ps = subprocess.Popen(beds,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
             output = ps.communicate()[0]
     else:
         #Bamtobed and seperate forward and reverse pair from read ID
-        cmd1 = "bedtools bamtobed -i "+ align_path +file_prefix+".bam" 
+        cmd1 = "bedtools bamtobed -i "+ align_path +file_prefix+".bam"
         cmd2 = "sed 's|/|\\t|g' |cut -f1-5,7 >" +align_path +file_prefix+".bam.bed"
         beds = "{inS} |{sed} ".format(inS=cmd1, sed=cmd2)
         ps = subprocess.Popen(beds,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -123,25 +123,25 @@ def run_split(file_prefix,align_path,peak_path, num_threads, overwrite_files):
     else:
         df=pybedtools.BedTool(align_path +file_prefix+".bam.bed").to_dataframe()
         #Based on chrom and read ID, sort alignment by base and merge alignment to avoid overlapped reads
-        df['chrom'] = df[['chrom','name']].apply(lambda x : '{}__{}'.format(x[0],x[1]), axis=1) 
+        df['chrom'] = df[['chrom','name']].apply(lambda x : '{}__{}'.format(x[0],x[1]), axis=1)
         x =BedTool.sort(BedTool.from_dataframe(df))
         d =BedTool.merge(x,c = '5,6', o = 'collapse,collapse')
-        dM=d.groupby(g = [1], c = [2,3,4,5],o = ['min','max','collapse','collapse'] )     
+        dM=d.groupby(g = [1], c = [2,3,4,5],o = ['min','max','collapse','collapse'] )
         #Based on chrom and read ID, get strand and pair info and format dataframe
         namess=['chrom','start','end','pair','strand']
         dM=BedTool.to_dataframe(dM,names = namess)
-        pd.options.mode.chained_assignment = None 
+        pd.options.mode.chained_assignment = None
         #Extract split reads, which has 3unique hits, same chromosome and same oriantation for a pair
-        splitM =dM[(dM.pair == "1,2,1") & (dM.strand == "+,-,+" ) | 
-                (dM.pair =="2,1,2") & (dM.strand == "-,+,-") | 
-                (dM.pair =="1,2,1") & (dM.strand == "-,+,-") | 
-                (dM.pair =="2,1,2") & (dM.strand == "+,-,+") 
+        splitM =dM[(dM.pair == "1,2,1") & (dM.strand == "+,-,+" ) |
+                (dM.pair =="2,1,2") & (dM.strand == "-,+,-") |
+                (dM.pair =="1,2,1") & (dM.strand == "-,+,-") |
+                (dM.pair =="2,1,2") & (dM.strand == "+,-,+")
                 ]
         splitM[['chrom','read']] = splitM['chrom'].str.split('__',expand=True)
         splitM['length'] = splitM.end-splitM.start
         splitM =splitM.sort_values(by=['chrom', 'start'])
-        splitM.to_csv(peak_path +file_prefix+".split.bed", header=False, index = False, sep='\t') 
-        
+        splitM.to_csv(peak_path +file_prefix+".split.bed", header=False, index = False, sep='\t')
+
 def run_disc(file_prefix,align_path,peak_path, num_threads, overwrite_files):
     if os.path.isfile(peak_path +file_prefix+".disc.bed"):
         log("INFO", "Retaining pre-existing file: " + peak_path +file_prefix+".disc.bed")
@@ -149,7 +149,7 @@ def run_disc(file_prefix,align_path,peak_path, num_threads, overwrite_files):
         raw=align_path +file_prefix+".bam.bed"
         df=pybedtools.BedTool(raw).to_dataframe()
         #Based on chrom and read ID, sort alignment by base and merge alignment to avoid overlapped reads
-        df['chrom'] = df[['chrom','name']].apply(lambda x : '{}__{}'.format(x[0],x[1]), axis=1) 
+        df['chrom'] = df[['chrom','name']].apply(lambda x : '{}__{}'.format(x[0],x[1]), axis=1)
         x =BedTool.sort(BedTool.from_dataframe(df))
         y =BedTool.merge(x,c = '5,6', o = 'collapse,collapse')
         d =BedTool.to_dataframe(y,names = ['chrom','start','end','pair','strand'])
@@ -158,13 +158,13 @@ def run_disc(file_prefix,align_path,peak_path, num_threads, overwrite_files):
         #Based on chrom and read ID, get strand and pair info and format dataframe
         namess=['chrom','start','end','pair','strand']
         dM=BedTool.to_dataframe(dM,names = namess)
-        pd.options.mode.chained_assignment = None 
+        pd.options.mode.chained_assignment = None
         #Extract discordant reads, which has outward facing direction for a pair
         disc=dM[(dM.pair =="1,2") & (dM.strand == "-,+" ) ]
         disc[['chrom','read']] = disc['chrom'].str.split('__',expand=True)
         disc['length'] = disc.end-disc.start
         disc =disc.sort_values(by=['chrom', 'start'])
-        disc.to_csv(peak_path +file_prefix+".disc.bed", header=False, index = False, sep='\t') 
+        disc.to_csv(peak_path +file_prefix+".disc.bed", header=False, index = False, sep='\t')
 
 def read_files(filelist):
     dfs = []
@@ -195,14 +195,14 @@ def run_intersect(file_prefix,peak_path,output_path, num_threads, min_read,overw
         d=BedTool.from_dataframe(d).groupby(g = [1,2,3], c = [9],o = ['count_distinct'] ).saveas(output_path +file_prefix+".disc.num.bed")
         files = glob.glob(output_path +file_prefix+".split.num.bed")
         files.extend(glob.glob(output_path +file_prefix+".disc.num.bed"))
-        df = read_files(files) 
+        df = read_files(files)
         float_col = df.select_dtypes(include=['float64'])
         for col in float_col.columns.values:
             df[col] = df[col].astype('int64')
         df['length'] = df.end-df.start
         df=df[df['read_x']-min_read>=0]
-        df.to_csv(output_path +file_prefix+".csv", header=False, index = False, sep='\t') 
-        
+        df.to_csv(output_path +file_prefix+".csv", header=False, index = False, sep='\t')
+
 def run_getFasta(output_path, file_prefix ,ref_genome,overwrite_files):
     if os.path.isfile(output_path +file_prefix +".fasta"):
         if not overwrite_files:
@@ -210,20 +210,20 @@ def run_getFasta(output_path, file_prefix ,ref_genome,overwrite_files):
         else:
             log("INFO", "Overwriting pre-existing file: " + output_path +file_prefix+".fasta")
             cmd ="seqtk subseq "+ ref_genome+ " " + output_path +file_prefix +".csv" + "> "+output_path +file_prefix +".fasta"
-            subprocess.call(cmd, shell=True) 
-    else: 
+            subprocess.call(cmd, shell=True)
+    else:
         cmd ="seqtk subseq "+ ref_genome+ " " + output_path +file_prefix +".csv" + "> "+output_path +file_prefix +".fasta"
-        subprocess.call(cmd, shell=True) 
+        subprocess.call(cmd, shell=True)
 
 def main():
     description = "A tool to detect eccDNA loci using Illumina read sequencing"
-    parser = argparse.ArgumentParser(description=description, usage="python ecc_finder.py map-sr <reference.idx> <query.fq1> <query.fq2>")
+    parser = argparse.ArgumentParser(description=description, usage="ecc_finder map-sr <reference.idx> <query.fq1> <query.fq2>")
     parser.add_argument("idx", metavar="<reference.idx>", nargs='?', default="", type=str, help="index file of reference genome")
     parser.add_argument("query1", metavar="<query.fq1>", nargs='?', default="", type=str, help="query fastq forward file (uncompressed or bgzipped)")
     parser.add_argument("query2", metavar="<query.fq2>", nargs='?', default="", type=str, help="query fastq reverse file (uncompressed or bgzipped)")
     parser.add_argument("-r", metavar="<reference.fasta>", default="", type=str, help="reference genome fasta (uncompressed or bgzipped)")
 
-    map_options = parser.add_argument_group("map options")   
+    map_options = parser.add_argument_group("map options")
     map_options.add_argument('-t', metavar="INT",type=int, default=get_default_thread(),
                             help='number of CPU threads for mapping mode')
     map_options.add_argument("--aligner", metavar="PATH", type=str, default="bwa", help="short read aligner executable ('bwa', 'minimap2') [bwa]")
@@ -249,13 +249,13 @@ def main():
         sys.exit("\n** The reference fasta, idx and query files are required **")
 
     log("VERSION", "ecc_finder " + get_eccFinder_version())
-    log("CMD", "python ecc_finder.py map-sr " + " ".join(sys.argv[1:]))
+    log("CMD", "ecc_finder map-sr " + " ".join(sys.argv[1:]))
 
     idx_file = os.path.abspath(args.idx)
     query1_file = os.path.abspath(args.query1)
     query2_file = os.path.abspath(args.query2)
     ref_genome = args.r
-    
+
     if not os.path.isfile(query1_file):
         raise FileNotFoundError("Could not find file: %s" % query1_file)
     if not os.path.isfile(query2_file):
@@ -316,7 +316,7 @@ def main():
     bwa_params = args.bwa_params +" -t " + str(num_threads)
     minimap2_params = args.minimap2_params +" -t " + str(num_threads)
 
-    if genome_aligner == "bwa":       
+    if genome_aligner == "bwa":
         map_all = bwaAligner(idx_file, [align_path +file_prefix+".R1.fastq.gz",align_path +file_prefix+".R2.fastq.gz"],genome_aligner, bwa_params,align_path + file_prefix , in_overwrite=overwrite_files)
         print(map_all)
         map_all.run_aligner()
@@ -347,7 +347,7 @@ def main():
     # Detect siginificant sites of genomic enrichment.
     log("INFO", "Detecting sites of genomic enrichment")
     run_Genrich(file_prefix,align_path,output_path,peak_path,num_threads, min_peak,max_dist,max_pvalue,overwrite_files)
-    
+
     # Detect split and discordant reads accordingly
     log("INFO", "Detect split reads")
     run_split(file_prefix,align_path,peak_path, num_threads, overwrite_files)

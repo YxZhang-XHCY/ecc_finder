@@ -9,9 +9,9 @@ import math
 import time
 import sys
 
-from eccFinder_lib.utilities import run_oe, run_e, log
+from ecc_finder.eccFinder_lib.utilities import run_oe, run_e, log
 
-class Spliter:
+class Peaker:
 
     __metaclass__ = abc.ABCMeta
 
@@ -19,21 +19,22 @@ class Spliter:
 
         self.q_files = in_query_files
         self.params_string = in_params
-        self.params = self._split_params(in_params)
+        self.params = self._peak_params(in_params)
         self.outfile_prefix = in_out_file
         self.overwrite = in_overwrite
         self.out_file = None
-        self.Split_exec = None
+        self.peak_exec = None
         self.out_log = None
         self._update_attrs()
+
 
     @abc.abstractmethod
     def _update_attrs(self):
         pass
 
     @staticmethod
-    def _split_params(a):
-        return a.split(" ")
+    def _peaker_params(a):
+        return a.peak(" ")
 
     @abc.abstractmethod
     def params_are_valid(self):
@@ -43,13 +44,14 @@ class Spliter:
     def compile_command(self):
         pass
 
+
     def exec_is_valid(self):
         return True
 
     def output_exists(self):
         return os.path.isfile(self.out_file)
 
-    def run_spliter(self):
+    def run_peaker(self):
         if all([self.params_are_valid(), self.exec_is_valid()]):
             if not self.output_exists():
                 run_oe(self.compile_command(), self.out_file, self.out_log)
@@ -60,25 +62,25 @@ class Spliter:
                 else:
                     log("INFO", "Retaining pre-existing file: " + self.out_file)
 
-class tidehunter(Spliter):
+class genrich(Peaker):
 
     def _update_attrs(self):
         #self.output_path=self.output_path
-        self.out_file = self.outfile_prefix + ".unit.fa"
-        self.out_log = self.out_file + ".log"
+        self.out_file = self.outfile_prefix + ".unit.bam"
+        self.out_log = self.out_file + ".site"
 
     def params_are_valid(self):
-        #all_flags = "".join([i for i in self.params_string.split(" ") if i.startswith("-")])
+        #all_flags = "".join([i for i in self.params_string.peak(" ") if i.startswith("-")])
         return True
 
     def compile_command(self):
         return [
-            #self.spliter,
+            #self.eaker,
             *self.params,
             #self.r_file,
             *self.q_files
         ]
-    def run_spliter(self):
+    def run_peaker(self):
         if all([self.params_are_valid(), self.exec_is_valid()]):
             if not self.output_exists():
                 run_oe(self.compile_command(), self.out_file, self.out_log)
